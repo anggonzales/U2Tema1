@@ -44,6 +44,7 @@ public class MiLogin extends AppCompatActivity {
     public int ValidaDatos(String usuario, String pass) {
         int result = 3;
         try {
+            Log.i("miruta", getString(R.string.dominio) + getString(R.string.login) + usuario + "&pass=" + pass);
             URL url = new URL(getString(R.string.dominio) + getString(R.string.login) + usuario + "&pass=" + pass);
             conexion = (HttpURLConnection) url
                     .openConnection();
@@ -68,6 +69,7 @@ public class MiLogin extends AppCompatActivity {
     public void onLogin(View view) {
         int V = ValidaDatos(Login.getText().toString(), password.getText().toString());
         if (V == 0) {
+            //Para poder editar
             editor = prefs.edit();
             editor.putBoolean("onlogin", true);
             editor.apply();
