@@ -4,16 +4,25 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,12 +31,14 @@ public class ConsultaCliente extends AppCompatActivity {
 
     HttpURLConnection conexion;
     private String res;
+    String per;
     String codpersona;
-    TextView cod;
+    private TextView cod;
     private EditText apellido;
     private Spinner sexo;
     private EditText nombre;
     private EditText telefono;
+    private int isexo;
     private EditText direccion;
 
 
@@ -44,6 +55,8 @@ public class ConsultaCliente extends AppCompatActivity {
         apellido = (EditText) findViewById(R.id.txtapellido);
         telefono = (EditText) findViewById(R.id.txttelefono);
         direccion = (EditText) findViewById(R.id.txtdireccion);
+        sexo = (Spinner) findViewById(R.id.sexo);
+        isexo=(sexo.getSelectedItem().toString().equals("Masculino"))?0:1;
 
         try {
             String miurl = this.getString(R.string.dominio) + this.getString(R.string.verdetallecliente) + codpersona;
@@ -104,5 +117,47 @@ public class ConsultaCliente extends AppCompatActivity {
             if (conexion != null) conexion.disconnect();
         }
         return Clientes;
+    }
+
+    public void Editar(View view) {
+        //POST
+        try {
+            JSONObject postData = new JSONObject();
+            postData.put("codpersona", codpersona);
+            postData.put("nombre", nombre.getText().toString());
+            postData.put("apellido", apellido.getText().toString());
+            postData.put("sexo", isexo);
+            postData.put("telefono", telefono.getText().toString());
+            postData.put("direccion", direccion.getText().toString());
+            String myurl= this.getString(R.string.dominio)+this.getString(R.string.editarcliente);
+            Log.i("respuesta",myurl);
+            URL url = new URL(myurl);
+            conexion = (HttpURLConnection) url.openConnection();
+            conexion.setRequestProperty("Content-Type", "application/json");
+            conexion.setRequestMethod("POST");
+            conexion.setDoOutput(true);
+            conexion.setDoInput(true);
+            conexion.setChunkedStreamingMode(0);
+            OutputStream out = new BufferedOutputStream(conexion.getOutputStream());
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                    out, "UTF-8"));
+            writer.write(postData.toString());
+            writer.flush();
+            if (conexion.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conexion.getInputStream()));
+                String linea = reader.readLine();
+                if (!linea.equals("OK\\n")) Log.e("mierror2","Error en servicio Web nueva");
+                else
+                { Toast.makeText(this, "Actualización Exitosa", Toast.LENGTH_SHORT).show();
+                    finish();
+                    Log.e("mierror","No hay error");}
+            } else {Log.e("mi error", conexion.getResponseMessage());}
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (conexion != null) {
+                conexion.disconnect();
+            }
+        }
     }
 }
