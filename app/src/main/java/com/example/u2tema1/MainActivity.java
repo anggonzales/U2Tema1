@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -35,14 +36,18 @@ public class MainActivity  extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         recyclerView = findViewById(R.id.recycler_view);
         misdatos = new ArrayList<>();
-        misdatos.add(new Cliente("1", "Juanito", "Perez"));
-        misdatos.add(new Cliente("2", "Pablito", "Canto"));
+        //misdatos.add(new Cliente("1", "Juanito", "Perez"));
+        //misdatos.add(new Cliente("2", "Pablito", "Canto"));
         //adaptador = new MiNuevoAdaptador(this, misdatos);
-        adaptador = new MiNuevoAdaptador(this,
+       adaptador = new MiNuevoAdaptador(this,
                 ListaClientes(conseguirstring()));
+
+        Peticion consulta = new Peticion();
+        //adaptador = new MiNuevoAdaptador(this, misdatos);
         recyclerView.setAdapter(adaptador);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
+
     }
 
     //Leyendo JSON
@@ -102,5 +107,41 @@ public class MainActivity  extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         adaptador.update(ListaClientes(conseguirstring()));
+    }
+
+    public static class Peticion extends AsyncTask<Void,Void,ArrayList<Cliente>> {
+        private String res;
+        HttpURLConnection conexion;
+
+        @Override
+        protected ArrayList<Cliente> doInBackground(Void... voids) {
+            try {
+                String miurl= "https://notogaea-decoration.000webhostapp.com/clientes.php";
+                URL url=new URL(miurl);
+                conexion = (HttpURLConnection) url.openConnection();
+                if (conexion.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conexion.getInputStream()));
+                    String linea = reader.readLine();
+                    res=linea;
+                } else {
+                    Log.e("mierror", conexion.getResponseMessage());
+                }
+            } catch (Exception e) {
+
+            }
+
+            ArrayList<Cliente> Clientes = new ArrayList<>();
+            try {
+                JSONArray json_array = new JSONArray(res);
+                for (int i = 0; i < json_array.length(); i++) {
+                    JSONObject objeto = json_array.getJSONObject(i);
+                    Clientes.add(new Cliente(objeto.getString("Cod_persona"), objeto.getString("Nombre"),objeto.getString("Apellidos")));
+                }
+            } catch (JSONException e) {
+                Log.i("MI erro", e.toString());
+                e.printStackTrace();
+            }
+            return Clientes;
+        }
     }
 }

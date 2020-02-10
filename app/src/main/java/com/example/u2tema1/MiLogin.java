@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -15,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -39,6 +41,8 @@ public class MiLogin extends AppCompatActivity {
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitNetwork().build());
         Login = (EditText) findViewById(R.id.edtUsuario);
         password = (EditText) findViewById(R.id.edtPassword);
+
+
     }
 
     public int ValidaDatos(String usuario, String pass) {
@@ -67,7 +71,10 @@ public class MiLogin extends AppCompatActivity {
     }
 
     public void onLogin(View view) {
-        int V = ValidaDatos(Login.getText().toString(), password.getText().toString());
+
+        Peticion validar = new Peticion();
+        validar.execute();
+        /*int V = ValidaDatos(Login.getText().toString(), password.getText().toString());
         if (V == 0) {
             //Para poder editar
             editor = prefs.edit();
@@ -77,6 +84,29 @@ public class MiLogin extends AppCompatActivity {
             startActivity(i);
             finish();
         } else
-            Toast.makeText(this, "Ingreso Fallido", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Ingreso Fallido", Toast.LENGTH_SHORT).show();*/
+    }
+
+    public class Peticion extends AsyncTask<Void, Void, Integer> {
+        String usu = Login.getText().toString();
+        String pass = password.getText().toString();
+        int validar = 0;
+        @Override
+        protected Integer doInBackground(Void... voids) {
+            validar = ValidaDatos(usu, pass);
+            return validar;
+        }
+
+        @Override protected void onPostExecute(Integer res) {
+            if (res == 0) {
+                //Para poder editar
+                editor = prefs.edit();
+                editor.putBoolean("onlogin", true);
+                editor.apply();
+                Intent i = new Intent( getApplicationContext(), MainActivity.class);
+                startActivity(i);
+                finish();
+            }
+        }
     }
 }
